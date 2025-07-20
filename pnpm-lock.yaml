@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@actioncodes/protocol':
-        specifier: ^1.1.5
-        version: 1.1.5(@solana/spl-memo@0.2.5(@solana/web3.js@1.98.2(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)))(@solana/web3.js@1.98.2(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10))(tweetnacl@1.0.3)
+        specifier: ^1.1.6
+        version: 1.1.6(@solana/spl-memo@0.2.5(@solana/web3.js@1.98.2(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)))(@solana/web3.js@1.98.2(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10))(tweetnacl@1.0.3)
       '@solana/web3.js':
         specifier: ^1.98.2
         version: 1.98.2(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)
@@ -84,8 +84,8 @@ importers:
 
 packages:
 
-  '@actioncodes/protocol@1.1.5':
-    resolution: {integrity: sha512-uTDJgDimtNtIF15FhwFufV3O7aqTOR+WasyIuV8ojELIc6fYKqvS5ZBQJgM7Rj0QA0V8fWu12QollKgvTYd/Ew==}
+  '@actioncodes/protocol@1.1.6':
+    resolution: {integrity: sha512-db1/ENoKnwl6YN61mFsbn68Iqr0xmfjpURvEUnWmQHkGvUlBGbs0w16j+It7rTGhcVZh+pEWA+gjhOSrT9HxlA==}
     peerDependencies:
       '@solana/spl-memo': ^0.2.5
       '@solana/web3.js': ^1.98.2
@@ -3223,7 +3223,7 @@ packages:
 
 snapshots:
 
-  '@actioncodes/protocol@1.1.5(@solana/spl-memo@0.2.5(@solana/web3.js@1.98.2(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)))(@solana/web3.js@1.98.2(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10))(tweetnacl@1.0.3)':
+  '@actioncodes/protocol@1.1.6(@solana/spl-memo@0.2.5(@solana/web3.js@1.98.2(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)))(@solana/web3.js@1.98.2(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10))(tweetnacl@1.0.3)':
     dependencies:
       '@solana/spl-memo': 0.2.5(@solana/web3.js@1.98.2(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10))
       '@solana/web3.js': 1.98.2(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)
