@@ -80,7 +80,7 @@
     "typescript-eslint": "^8.37.0"
   },
   "dependencies": {
-    "@actioncodes/protocol": "^1.1.3",
+    "@actioncodes/protocol": "^1.1.4",
     "framer-motion": "^12.23.6"
   },
   "peerDependencies": {
