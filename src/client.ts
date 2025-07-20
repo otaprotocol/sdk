@@ -51,7 +51,7 @@ export interface RegisterCodeRequest {
     timestamp: number;
     prefix: string;
     chain: 'solana';
-    meta?: ActionCodeMeta;
+    metadata?: ActionCodeMeta;
 }
 
 /**
@@ -257,7 +257,7 @@ export class ActionCodesClient {
      * @param sign - The function to sign a message.
      * @returns The response from the action codes protocol.
      */
-    public async register(pubkey: PublicKey, sign: (message: string) => Promise<string>): Promise<RegisterCodeResponse> {
+    public async register(pubkey: PublicKey, sign: (message: string) => Promise<string>, metadata: ActionCodeMeta = {}): Promise<ActionCode> {
         try {
             const actionCode = await this.protocol.createActionCode(pubkey.toBase58(), sign, 'solana');
 
@@ -268,11 +268,16 @@ export class ActionCodesClient {
                 timestamp: actionCode.timestamp,
                 prefix: actionCode.prefix,
                 chain: 'solana',
+                metadata,
             }
 
             const response = await this.request<RegisterCodeResponse, RegisterCodeRequest>("POST", `/api/register`, request);
 
-            return response;
+            if (response.codeHash === actionCode.codeHash) {
+                return actionCode;
+            } else {
+                throw new Error("Failed to register code");
+            }
         } catch (error) {
             if (error instanceof ActionCodesBaseError) throw error;
             throw error;
