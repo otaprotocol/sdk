@@ -4,7 +4,6 @@ import {
     CodeNotFoundError,
     ActionSubmissionFailedError,
     TransactionDecodingError,
-    NetworkRequestError,
     UnauthorizedError,
     ExpiredCodeError,
     UnsupportedPrefixError,
@@ -37,12 +36,6 @@ describe('Error classes', () => {
         const err = new TransactionDecodingError();
         expect(err.code).toBe('TRANSACTION_DECODING_ERROR');
         expect(err.message).toMatch(/decode/);
-    });
-
-    test('NetworkRequestError', () => {
-        const err = new NetworkRequestError();
-        expect(err.code).toBe('NETWORK_REQUEST_ERROR');
-        expect(err.message).toMatch(/Network request failed/);
     });
 
     test('UnauthorizedError', () => {

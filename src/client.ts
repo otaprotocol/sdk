@@ -1,6 +1,6 @@
 import { PublicKey } from "@solana/web3.js";
-import { ActionCode, ActionCodeFields, ActionCodeStatus, ActionCodesProtocol, CodeGenerator } from "@actioncodes/protocol";
-import { CodeNotFoundError, UnauthorizedError, ExpiredCodeError, NetworkRequestError, ActionCodesBaseError, InvalidCodeFormatError } from "./error";
+import { ActionCode, ActionCodeFields, ActionCodeStatus, ActionCodesProtocol, CodeGenerator, SolanaAdapter } from "@actioncodes/protocol";
+import { CodeNotFoundError, UnauthorizedError, ExpiredCodeError, ActionCodesBaseError, InvalidCodeFormatError } from "./error";
 
 /**
  * The meta data for the action code.
@@ -142,6 +142,7 @@ export interface ObserveStatusOptions {
  */
 export class ActionCodesClient {
     constructor(private readonly baseUrl = "https://relay.ota.codes", private readonly protocol: ActionCodesProtocol = new ActionCodesProtocol()) {
+        this.protocol.registerAdapter(new SolanaAdapter());
     }
 
     /**
@@ -166,12 +167,12 @@ export class ActionCodesClient {
                 if (res.status === 404) throw new CodeNotFoundError();
                 if (res.status === 401) throw new UnauthorizedError();
                 if (res.status === 410) throw new ExpiredCodeError();
-                throw new NetworkRequestError({ status: res.status, path });
+                throw new Error(`Network request failed with status ${res.status} for path ${path}`);
             }
             return res.json();
         } catch (error) {
             if (error instanceof ActionCodesBaseError) throw error;
-            throw new NetworkRequestError(error);
+            throw error;
         }
     }
 
@@ -215,7 +216,7 @@ export class ActionCodesClient {
         while (true) {
             // Check if timeout has been reached
             if (Date.now() - startTime > timeout) {
-                throw new NetworkRequestError({ status: 408, path: `/api/status/${code}` });
+                throw new Error(`Timeout while observing status of code ${code}`);
             }
 
             try {
@@ -274,7 +275,7 @@ export class ActionCodesClient {
             return response;
         } catch (error) {
             if (error instanceof ActionCodesBaseError) throw error;
-            throw new NetworkRequestError(error);
+            throw error;
         }
     }
 

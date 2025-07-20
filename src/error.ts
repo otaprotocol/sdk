@@ -66,19 +66,6 @@ export class TransactionDecodingError extends ActionCodesBaseError {
 }
 
 /**
- * Error thrown when a network request fails.
- */
-export class NetworkRequestError extends ActionCodesBaseError {
-    constructor(details?: any) {
-        super(
-            'Network request failed. Please check your connection and try again.',
-            'NETWORK_REQUEST_ERROR',
-            details
-        );
-    }
-}
-
-/**
  * Error thrown when the user is unauthorized.
  */
 export class UnauthorizedError extends ActionCodesBaseError {
