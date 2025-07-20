@@ -2,15 +2,31 @@ import { PublicKey } from "@solana/web3.js";
 import { ActionCode, ActionCodeFields, ActionCodeStatus, ActionCodesProtocol, CodeGenerator } from "@actioncodes/protocol";
 import { CodeNotFoundError, UnauthorizedError, ExpiredCodeError, NetworkRequestError, ActionCodesBaseError, InvalidCodeFormatError } from "./error";
 
+/**
+ * The meta data for the action code.
+ * @property description - The description of the action code.
+ * @property params - The parameters for the action code.
+ */
 export interface ActionCodeMeta {
     description?: string;
     params?: Record<string, string>;
 }
 
+/**
+ * The request to resolve a code.
+ * @property code - The code to resolve.
+ */
 export interface ResolveCodeRequest {
     code: string;
 }
 
+/**
+ * The response to the status of an action code.
+ * @property status - The status of the action code.
+ * @property expiresAt - The expiration time of the action code.
+ * @property hasTransaction - Whether the action code has a transaction.
+ * @property finalizedSignature - The signature of the finalized action code.
+ */
 export interface ActionCodeStatusResponse {
     status: ActionCodeStatus;
     expiresAt: number;
@@ -18,6 +34,16 @@ export interface ActionCodeStatusResponse {
     finalizedSignature: string | null;
 }
 
+/**
+ * The request to register a code.
+ * @property code - The code to register.
+ * @property pubkey - The public key of the user.
+ * @property signature - The signature of the user.
+ * @property timestamp - The timestamp of the user.
+ * @property prefix - The prefix of the user.   
+ * @property chain - The chain of the user.
+ * @property meta - The meta data for the action code.
+ */
 export interface RegisterCodeRequest {
     code: string;
     pubkey: string;
@@ -28,6 +54,14 @@ export interface RegisterCodeRequest {
     meta?: ActionCodeMeta;
 }
 
+/**
+ * The response to the register of an action code.
+ * @property codeHash - The hash of the code.
+ * @property issuedAt - The issued time of the code.
+ * @property expiresAt - The expiration time of the code.
+ * @property remainingInSeconds - The remaining seconds of the code.
+ * @property status - The status of the code.
+ */
 export interface RegisterCodeResponse {
     codeHash: string;
     issuedAt: number;
@@ -36,6 +70,13 @@ export interface RegisterCodeResponse {
     status: ActionCodeStatus;
 }
 
+/**
+ * The request to attach a code.
+ * @property code - The code to attach.
+ * @property chain - The chain of the code.
+ * @property transaction - The transaction to attach.
+ * @property meta - The meta data for the action code.
+ */
 export interface AttachCodeRequest {
     code: string;
     chain: 'solana';
@@ -43,6 +84,15 @@ export interface AttachCodeRequest {
     meta?: ActionCodeMeta;
 }
 
+/**
+ * The response to the attach of an action code.
+ * @property status - The status of the code.
+ * @property codeHash - The hash of the code.
+ * @property expiresAt - The expiration time of the code.
+ * @property chain - The chain of the code.
+ * @property actionCodeStatus - The status of the action code.
+ * @property hasTransaction - Whether the action code has a transaction.
+ */
 export interface AttachCodeResponse {
     status: string;
     codeHash: string;
@@ -52,27 +102,55 @@ export interface AttachCodeResponse {
     hasTransaction: boolean;
 }
 
+/**
+ * The request to finalize a code.
+ * @property code - The code to finalize.
+ * @property signature - The signature of finalized transaction..
+ */
 export interface FinalizeCodeRequest {
     code: string;
     signature: string;
 }
 
+/**
+ * The response to the finalize of an action code.
+ * @property status - The status of the code.
+ * @property finalizedSignature - The signature of the finalized transaction.
+ * @property expiresAt - The expiration time of the code.
+ */
 export interface FinalizeCodeResponse {
     status: string;
     finalizedSignature: string;
     expiresAt: number;
 }
 
+/**
+ * The options to observe the status of an action code.
+ * @property interval - The interval to observe the status of the action code.
+ * @property timeout - The timeout to observe the status of the action code.
+ */
 export interface ObserveStatusOptions {
     interval?: number;
     timeout?: number;
 }
 
 
+/**
+ * The client to interact with the action codes protocol.
+ * @property baseUrl - The base URL of the action codes protocol.
+ * @property protocol - The protocol to interact with the action codes protocol.
+ */
 export class ActionCodesClient {
     constructor(private readonly baseUrl = "https://relay.ota.codes", private readonly protocol: ActionCodesProtocol = new ActionCodesProtocol()) {
     }
 
+    /**
+     * The request to the action codes protocol.
+     * @param method - The method to request.
+     * @param path - The path to request.
+     * @param body - The body to request.
+     * @returns The response from the action codes protocol.
+     */
     private async request<T, U>(method: string, path: string, body?: U): Promise<T> {
 
         try {
@@ -97,6 +175,11 @@ export class ActionCodesClient {
         }
     }
 
+    /**
+     * The request to resolve a code.
+     * @param code - The code to resolve.
+     * @returns The action code.
+     */
     public async resolve(code: string): Promise<ActionCode> {
         this.validateCode(code);
 
@@ -105,12 +188,23 @@ export class ActionCodesClient {
         return ActionCode.fromPayload(actionCodeRaw);
     }
 
+    /**
+     * The request to get the status of a code.
+     * @param code - The code to get the status of.
+     * @returns The status of the code.
+     */
     public async getStatus(code: string): Promise<ActionCodeStatusResponse> {
         this.validateCode(code);
 
         return this.request<ActionCodeStatusResponse, { code: string }>("GET", `/api/status/${code}`);
     }
 
+    /**
+     * The request to observe the status of a code.
+     * @param code - The code to observe the status of.
+     * @param options - The options to observe the status of the code.
+     * @returns The status of the code.
+     */
     public async *observeStatus(code: string, options: ObserveStatusOptions = {}): AsyncGenerator<ActionCodeStatusResponse, void, unknown> {
         this.validateCode(code);
 
@@ -156,6 +250,12 @@ export class ActionCodesClient {
         }
     }
 
+    /**
+     * The request to register a code.
+     * @param pubkey - The public key of the user.
+     * @param sign - The function to sign a message.
+     * @returns The response from the action codes protocol.
+     */
     public async register(pubkey: PublicKey, sign: (message: string) => Promise<string>): Promise<RegisterCodeResponse> {
         try {
             const actionCode = await this.protocol.createActionCode(pubkey.toBase58(), sign, 'solana');
@@ -178,6 +278,13 @@ export class ActionCodesClient {
         }
     }
 
+    /**
+     * The request to attach a code.
+     * @param code - The code to attach.
+     * @param transaction - The transaction to attach.
+     * @param meta - The meta data for the action code.
+     * @returns The response from the action codes protocol.
+     */
     public async attach(code: string, transaction: string, meta?: ActionCodeMeta): Promise<AttachCodeResponse> {
         this.validateCode(code);
 
@@ -193,6 +300,12 @@ export class ActionCodesClient {
         return this.request<AttachCodeResponse, AttachCodeRequest>("POST", `/api/attach`, request);
     }
 
+    /**
+     * The request to finalize a code.
+     * @param code - The code to finalize.
+     * @param signature - The signature of the finalized transaction.
+     * @returns The response from the action codes protocol.
+     */
     public async finalize(code: string, signature: string): Promise<FinalizeCodeResponse> {
         this.validateCode(code);
 
@@ -204,6 +317,10 @@ export class ActionCodesClient {
         return this.request<FinalizeCodeResponse, FinalizeCodeRequest>("POST", `/api/finalize`, request);
     }
 
+    /**
+     * The request to validate a code.
+     * @param code - The code to validate.
+     */
     private validateCode(code: string) {
         if (!CodeGenerator.validateCodeFormat(code)) {
             throw new InvalidCodeFormatError();
