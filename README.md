@@ -37,25 +37,7 @@ for await (const status of client.observeStatus(actionCode.code)) {
 }
 ```
 
-## 🧰 API Reference
-
-### `register(pubkey, sign)`
-Registers a new action code with the relayer.
-
-### `resolve(code: string)`
-Returns the current action code status and payload.
-
-### `attach(code: string, transaction: string, meta?: ActionCodeMeta)`
-Attaches a serialized transaction (and optional metadata) to a registered code.
-
-### `finalize(code: string, signature: string)`
-Finalizes the action code by submitting the transaction signature.
-
-### `observeStatus(code: string, options?: ObserveStatusOptions)`
-Async generator that yields new statuses (`pending`, `attached`, `finalized`) until complete.
-
-### `attachAndWait(code: string, transaction: string, meta?: ActionCodeMeta, options?: ObserveStatusOptions)`
-Combines `attach()` and `observeStatus()` — resolves when the code is finalized.
+## Detailed API Reference at [docs.ota.codes](https://docs.ota.codes)
 
 ## 🛡 Error Handling
 
