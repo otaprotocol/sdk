@@ -192,7 +192,7 @@ export class ActionCodesClient {
 
         const actionCodeRaw = await this.request<ActionCodeFields, ResolveCodeRequest>("POST", `/api/resolve`, { code });
 
-        return ActionCode.fromPayload(actionCodeRaw);
+        return ActionCode.fromPayload({ ...actionCodeRaw, code });
     }
 
     /**
