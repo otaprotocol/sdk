@@ -31,7 +31,9 @@ export interface ActionCodeStatusResponse {
     status: ActionCodeStatus;
     expiresAt: number;
     hasTransaction: boolean;
+    hasMessage: boolean;
     finalizedSignature: string | null;
+    signedMessage: string | null;
 }
 
 /**
@@ -80,7 +82,9 @@ export interface RegisterCodeResponse {
 export interface AttachCodeRequest {
     code: string;
     chain: 'solana';
-    transaction: string;
+    transaction?: string;
+    message?: string;
+    intentType: 'transaction' | 'sign-only';
     meta?: ActionCodeMeta;
 }
 
@@ -100,6 +104,7 @@ export interface AttachCodeResponse {
     chain: string;
     actionCodeStatus: ActionCodeStatus;
     hasTransaction: boolean;
+    hasMessage: boolean;
 }
 
 /**
@@ -109,7 +114,8 @@ export interface AttachCodeResponse {
  */
 export interface FinalizeCodeRequest {
     code: string;
-    signature: string;
+    signature?: string;
+    signedMessage?: string;
 }
 
 /**
@@ -291,7 +297,7 @@ export class ActionCodesClient {
      * @param meta - The meta data for the action code.
      * @returns The response from the action codes protocol.
      */
-    public async attach(code: string, transaction: string, meta?: ActionCodeMeta): Promise<AttachCodeResponse> {
+    public async attachTransaction(code: string, transaction: string, meta?: ActionCodeMeta): Promise<AttachCodeResponse> {
         this.validateCode(code);
 
         const actionCode = await this.resolve(code);
@@ -299,7 +305,31 @@ export class ActionCodesClient {
         const request: AttachCodeRequest = {
             code: actionCode.code,
             chain: 'solana',
+            intentType: 'transaction',
             transaction,
+            meta,
+        }
+
+        return this.request<AttachCodeResponse, AttachCodeRequest>("POST", `/api/attach`, request);
+    }
+
+    /**
+     * The request to attach a message.
+     * @param code - The code to attach.
+     * @param message - The message to attach.
+     * @param meta - The meta data for the action code.
+     * @returns The response from the action codes protocol.
+     */
+    public async attachMessage(code: string, message: string, meta?: ActionCodeMeta): Promise<AttachCodeResponse> {
+        this.validateCode(code);
+
+        const actionCode = await this.resolve(code);
+
+        const request: AttachCodeRequest = {
+            code: actionCode.code,
+            chain: 'solana',
+            intentType: 'sign-only',
+            message,
             meta,
         }
 
@@ -312,12 +342,29 @@ export class ActionCodesClient {
      * @param signature - The signature of the finalized transaction.
      * @returns The response from the action codes protocol.
      */
-    public async finalize(code: string, signature: string): Promise<FinalizeCodeResponse> {
+    public async finalizeTransaction(code: string, signature: string): Promise<FinalizeCodeResponse> {
         this.validateCode(code);
 
         const request: FinalizeCodeRequest = {
             code,
             signature,
+        }
+
+        return this.request<FinalizeCodeResponse, FinalizeCodeRequest>("POST", `/api/finalize`, request);
+    }
+
+    /**
+     * The request to finalize a message.
+     * @param code - The code to finalize.
+     * @param signedMessage - The signed message.
+     * @returns The response from the action codes protocol.
+     */
+    public async finalizeMessage(code: string, signedMessage: string): Promise<FinalizeCodeResponse> {
+        this.validateCode(code);
+
+        const request: FinalizeCodeRequest = {
+            code,
+            signedMessage,
         }
 
         return this.request<FinalizeCodeResponse, FinalizeCodeRequest>("POST", `/api/finalize`, request);
