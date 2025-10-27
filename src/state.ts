@@ -7,6 +7,7 @@ export type ActionCodeState =
   | { type: "finalized-message"; signedMessage: string }
   | { type: "finalized-transaction"; signedTransaction: string }
   | { type: "finalized-execution"; txHash: string }
+  | { type: "redeemed"; intendedFor: string }
   | { type: "code"; data: relay.ActionCodeResolve };
 
 export function resolveActionCodeState(
@@ -38,6 +39,10 @@ export function resolveActionCodeState(
     code.data.mode === "sign-and-execute-transaction"
   ) {
     return { type: "finalized-execution", txHash: code.data.txHash };
+  }
+
+  if ("intendedFor" in code.data && code.data.mode === "redeem-code") {
+    return { type: "redeemed", intendedFor: code.data.intendedFor };
   }
 
   switch (code.data.mode) {

@@ -103,7 +103,8 @@ export namespace relay {
   export type ActionCodeMode =
     | "sign-and-execute-transaction"
     | "sign-only-message"
-    | "sign-only-transaction";
+    | "sign-only-transaction"
+    | "redeem-code";
 
   export interface ActionCodeFinalizePayloadSignAndExecuteTransaction {
     mode: "sign-and-execute-transaction";
@@ -124,7 +125,8 @@ export namespace relay {
   export type ActionCodePayload =
     | ActionCodePayloadSignOnlyMessage
     | ActionCodePayloadSignOnlyTransaction
-    | ActionCodePayloadSignAndExecuteTransaction;
+    | ActionCodePayloadSignAndExecuteTransaction
+    | ActionCodePayloadRedeemCode;
 
   export interface ActionCodePayloadSignAndExecuteTransaction {
     mode: "sign-and-execute-transaction";
@@ -139,6 +141,11 @@ export namespace relay {
   export interface ActionCodePayloadSignOnlyTransaction {
     mode: "sign-only-transaction";
     transaction: string;
+  }
+
+  export interface ActionCodePayloadRedeemCode {
+    mode: "redeem-code";
+    intendedFor: string; // the pubkey of the account that the code is intended for
   }
 
   export interface ActionCodeResolve {
@@ -159,6 +166,7 @@ export namespace relay {
     constructor(baseClient: BaseClient) {
       this.baseClient = baseClient;
       this.consume = this.consume.bind(this);
+      this.redeem = this.redeem.bind(this);
       this.finalize = this.finalize.bind(this);
       this.health = this.health.bind(this);
       this.publishDelegated = this.publishDelegated.bind(this);
@@ -202,6 +210,14 @@ export namespace relay {
           "Failed to consume action code: " + (error as Error).message
         );
       }
+    }
+
+    public async redeem(params: routes.RedeemRequest): Promise<void> {
+      await this.baseClient.callTypedAPI(
+        "POST",
+        `/redeem`,
+        JSON.stringify(params)
+      );
     }
 
     public async finalize(params: routes.FinalizeRequest): Promise<void> {
@@ -365,6 +381,12 @@ export namespace routes {
     code: string;
     chain: dist.Chain;
     payload: relay.ActionCodePayload;
+  }
+
+  export interface RedeemRequest {
+    code: string;
+    chain: dist.Chain;
+    payload: relay.ActionCodePayloadRedeemCode;
   }
 
   export interface FinalizeRequest {
@@ -618,8 +640,7 @@ class BaseClient {
     // Add User-Agent header if the script is running in the server
     // because browsers do not allow setting User-Agent headers to requests
     if (!BROWSER) {
-      this.headers["User-Agent"] =
-        "actioncodes-sdk-js";
+      this.headers["User-Agent"] = "actioncodes-sdk-js";
     }
 
     this.requestInit = options.requestInit ?? {};

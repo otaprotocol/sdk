@@ -80,10 +80,9 @@
     "typescript-eslint": "^8.37.0"
   },
   "dependencies": {
-    "@actioncodes/protocol": "^2.0.21",
-    "framer-motion": "^12.23.6"
+    "@actioncodes/protocol": "^2.0.21"
   },
   "peerDependencies": {
-    "@solana/web3.js": "^1.98.2"
+    "@solana/web3.js": "^1.98.4"
   }
 }
