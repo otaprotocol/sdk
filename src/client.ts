@@ -1,11 +1,12 @@
 import { SolanaAdapter } from "@actioncodes/protocol";
+import { ActionCodeState, resolveActionCodeState } from "./state";
 
 // Disable eslint, jshint, and jslint for this file.
 /* jshint ignore:start */
 /*jslint-disable*/
 
 /**
- * BaseURL is the base URL for calling the Encore application's API.
+ * BaseURL is the base URL for calling the Relayer API.
  */
 export type BaseURL = string;
 
@@ -14,33 +15,27 @@ export const Dev: BaseURL = "https://dev.relay.actioncodes.org";
 export const Prod: BaseURL = "https://relay.actioncodes.org";
 
 /**
- * Environment returns a BaseURL for calling the cloud environment with the given name.
+ * Environment returns a BaseURL for calling the cloud relayer with the given environment name.
  */
-export function Environment(name: string): BaseURL {
-  switch (name) {
-    case "dev":
-      return Dev;
-    case "prod":
-      return Prod;
-    case "local":
-      return Local;
-    default:
-      return Local;
-  }
+export function Environment(
+  name: "development" | "production" | "local"
+): BaseURL {
+  return {
+    development: Dev,
+    production: Prod,
+    local: Local,
+  }[name];
 }
 
 const BROWSER = typeof globalThis === "object" && "window" in globalThis;
 
-/**
- * Client is an API client for the actioncodes-relay-z5a2 Encore application.
- */
 export default class Client {
   public readonly relay: relay.ServiceClient;
   private readonly options: ClientOptions;
   private readonly target: string;
 
   /**
-   * Creates a Client for calling the public and authenticated APIs of your Encore application.
+   * Creates a Client for calling the public and authenticated APIs
    *
    * @param target  The target which the client should be configured to use. See Local and Environment for options.
    * @param options Options for the client
@@ -63,7 +58,7 @@ export default class Client {
   }
 
   /**
-   * Creates a new Encore client with the given client options set.
+   * Creates a new client with the given client options set.
    *
    * @param options Client options to set. They are merged with existing options.
    **/
@@ -76,12 +71,12 @@ export default class Client {
 }
 
 /**
- * ClientOptions allows you to override any default behaviour within the generated Encore client.
+ * ClientOptions allows you to override any default behaviour within the client.
  */
 export interface ClientOptions {
   /**
    * By default the client will use the inbuilt fetch function for making the API requests.
-   * however you can override it with your own implementation here if you want to run custom
+   * However you can override it with your own implementation here if you want to run custom
    * code on each API request made or response received.
    */
   fetcher?: Fetcher;
@@ -104,6 +99,11 @@ export namespace relay {
     | ActionCodeFinalizePayloadSignOnlyMessage
     | ActionCodeFinalizePayloadSignOnlyTransaction
     | ActionCodeFinalizePayloadSignAndExecuteTransaction;
+
+  export type ActionCodeMode =
+    | "sign-and-execute-transaction"
+    | "sign-only-message"
+    | "sign-only-transaction";
 
   export interface ActionCodeFinalizePayloadSignAndExecuteTransaction {
     mode: "sign-and-execute-transaction";
@@ -258,11 +258,11 @@ export namespace relay {
       chain: string,
       code: string,
       intervalMs: number = 2000
-    ): AsyncGenerator<ActionCodeResolve, void, void> {
+    ): AsyncGenerator<ActionCodeState, void, void> {
       while (true) {
         try {
           const data = await this.resolve(chain, code);
-          yield data;
+          yield resolveActionCodeState(data);
         } catch (error) {
           // Re-throw the error so the caller can handle it
           throw error;
@@ -619,7 +619,7 @@ class BaseClient {
     // because browsers do not allow setting User-Agent headers to requests
     if (!BROWSER) {
       this.headers["User-Agent"] =
-        "actioncodes-relay-z5a2-Generated-TS-Client (Encore/v1.50.4)";
+        "actioncodes-sdk-js";
     }
 
     this.requestInit = options.requestInit ?? {};
@@ -826,7 +826,7 @@ class BaseClient {
 }
 
 /**
- * APIErrorDetails represents the response from an Encore API in the case of an error
+ * APIErrorDetails represents the response from the API in the case of an error
  */
 interface APIErrorResponse {
   code: ErrCode;
@@ -851,7 +851,7 @@ function isErrCode(code: any): code is ErrCode {
 }
 
 /**
- * APIError represents a structured error as returned from an Encore application.
+ * APIError represents a structured error as returned from the API.
  */
 export class APIError extends Error {
   /**
@@ -860,7 +860,7 @@ export class APIError extends Error {
   public readonly status: number;
 
   /**
-   * The Encore error code
+   * The error code
    */
   public readonly code: ErrCode;
 
@@ -915,7 +915,7 @@ export enum ErrCode {
   /**
    * Canceled indicates the operation was canceled (typically by the caller).
    *
-   * Encore will generate this error code when cancellation is requested.
+   * The API will generate this error code when cancellation is requested.
    */
   Canceled = "canceled",
 
@@ -925,8 +925,8 @@ export enum ErrCode {
    * an error-space that is not known in this address space. Also
    * errors raised by APIs that do not return enough error information
    * may be converted to this error.
-   *
-   * Encore will generate this error code in the above two mentioned cases.
+   
+   * The API will generate this error code in the above two mentioned cases.
    */
   Unknown = "unknown",
 
