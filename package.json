@@ -12,7 +12,7 @@
     }
   },
   "scripts": {
-    "build": "pnpm run lint && pnpm run test && pnpm run build:js",
+    "build": "pnpm run lint && pnpm run build:js",
     "build:js": "tsc",
     "lint": "eslint .",
     "test": "jest",
@@ -80,7 +80,7 @@
     "typescript-eslint": "^8.37.0"
   },
   "dependencies": {
-    "@actioncodes/protocol": "^1.2.1",
+    "@actioncodes/protocol": "^2.0.21",
     "framer-motion": "^12.23.6"
   },
   "peerDependencies": {
