@@ -12,6 +12,10 @@ export type ActionCodeState =
 export function resolveActionCodeState(
   code: relay.ActionCodeResolve
 ): ActionCodeState {
+  if (!code.data) {
+    return { type: "code", data: code };
+  }
+
   if ("signedMessage" in code.data) {
     return {
       type: "finalized-message",
