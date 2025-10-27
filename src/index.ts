@@ -13,3 +13,5 @@
 // limitations under the License.
 
 export * from "./client";
+import ActionCodesClient from "./client";
+export default ActionCodesClient;
