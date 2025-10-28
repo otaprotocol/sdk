@@ -131,16 +131,19 @@ export namespace relay {
   export interface ActionCodePayloadSignAndExecuteTransaction {
     mode: "sign-and-execute-transaction";
     transaction: string;
+    intendedFor?: string; // the pubkey of the account that the transaction is intended for
   }
 
   export interface ActionCodePayloadSignOnlyMessage {
     mode: "sign-only-message";
     message: string;
+    intendedFor?: string; // the pubkey of the account that the message is intended for
   }
 
   export interface ActionCodePayloadSignOnlyTransaction {
     mode: "sign-only-transaction";
     transaction: string;
+    intendedFor?: string; // the pubkey of the account that the transaction is intended for
   }
 
   export interface ActionCodePayloadRedeemCode {
