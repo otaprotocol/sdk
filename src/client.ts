@@ -281,10 +281,18 @@ export namespace relay {
       code: string,
       intervalMs: number = 2000
     ): AsyncGenerator<ActionCodeState, void, void> {
+      let lastStateType: string | null = null;
+      
       while (true) {
         try {
           const data = await this.resolve(chain, code);
-          yield resolveActionCodeState(data);
+          const state = resolveActionCodeState(data);
+          
+          // Only yield if the state type has changed
+          if (state.type !== lastStateType) {
+            lastStateType = state.type;
+            yield state;
+          }
         } catch (error) {
           // Re-throw the error so the caller can handle it
           throw error;
