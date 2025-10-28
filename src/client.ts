@@ -110,16 +110,19 @@ export namespace relay {
     mode: "sign-and-execute-transaction";
     txHash: string;
     params?: { [key: string]: any };
+    intendedFor?: string; // the pubkey of the account that the transaction is intended for
   }
 
   export interface ActionCodeFinalizePayloadSignOnlyMessage {
     mode: "sign-only-message";
     signedMessage: string;
+    intendedFor?: string; // the pubkey of the account that the message is intended for
   }
 
   export interface ActionCodeFinalizePayloadSignOnlyTransaction {
     mode: "sign-only-transaction";
     signedTransaction: string;
+    intendedFor?: string; // the pubkey of the account that the transaction is intended for
   }
 
   export type ActionCodePayload =
