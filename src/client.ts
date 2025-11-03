@@ -91,13 +91,13 @@ export default class Client {
     pubkey: string,
     chain: Chain,
     signFn: SignFn
-  ): Promise<publish.PublishResponse> {
+  ): Promise<ActionCode> {
     const actionCode = await this.protocol.generateActionCode(
       pubkey,
       chain,
       signFn
     );
-    return await this.relay.publishWallet({
+    await this.relay.publishWallet({
       code: actionCode.code,
       chain: chain,
       expiresAt: actionCode.expiresAt,
@@ -105,6 +105,8 @@ export default class Client {
       timestamp: actionCode.timestamp,
       signature: actionCode.signature,
     } as publish.PublishRequest);
+
+    return actionCode;
   }
 }
 
