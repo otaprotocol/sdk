@@ -40,6 +40,7 @@ const BROWSER = typeof globalThis === "object" && "window" in globalThis;
 export default class Client {
   public readonly relay: relay.ServiceClient;
   public readonly protocol: protocol.ProtocolClient;
+  public readonly core: ActionCodesProtocol;
   private readonly options: ClientOptions;
   private readonly target: string;
   /**
@@ -63,9 +64,8 @@ export default class Client {
     this.options = options;
     const base = new BaseClient(this.target, this.options);
     this.relay = new relay.ServiceClient(base);
-    this.protocol = new protocol.ProtocolClient(
-      new ActionCodesProtocol(this.options.protocol)
-    );
+    this.core = new ActionCodesProtocol(this.options.protocol);
+    this.protocol = new protocol.ProtocolClient(this.core);
   }
 
   /**
@@ -135,7 +135,7 @@ export interface ClientOptions {
 
 export namespace protocol {
   export class ProtocolClient {
-    private readonly protocol: ActionCodesProtocol;
+    public readonly protocol: ActionCodesProtocol;
 
     constructor(protocol: ActionCodesProtocol) {
       this.protocol = protocol;
