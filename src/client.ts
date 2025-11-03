@@ -39,8 +39,8 @@ const BROWSER = typeof globalThis === "object" && "window" in globalThis;
 
 export default class Client {
   public readonly relay: relay.ServiceClient;
-  public readonly protocol: protocol.ProtocolClient;
-  public readonly core: ActionCodesProtocol;
+  private _protocol: protocol.ProtocolClient | undefined;
+  private _core: ActionCodesProtocol | undefined;
   private readonly options: ClientOptions;
   private readonly target: string;
   /**
@@ -64,8 +64,6 @@ export default class Client {
     this.options = options;
     const base = new BaseClient(this.target, this.options);
     this.relay = new relay.ServiceClient(base);
-    this.core = new ActionCodesProtocol(this.options.protocol);
-    this.protocol = new protocol.ProtocolClient(this.core);
   }
 
   /**
@@ -80,8 +78,27 @@ export default class Client {
     });
   }
 
+  public withProtocol(config: CodeGenerationConfig): this {
+    this._core = new ActionCodesProtocol(config);
+    this._protocol = new protocol.ProtocolClient(this._core);
+    return this;
+  }
+
+  public get protocol(): protocol.ProtocolClient {
+    if (!this._protocol)
+      throw new Error("Protocol not initialized. Use .withProtocol() first.");
+    return this._protocol;
+  }
+
+  public get core(): ActionCodesProtocol {
+    if (!this._core)
+      throw new Error("Core protocol not initialized. Use .withProtocol() first.");
+    return this._core;
+  }
+
   /**
    * Generates an action code and publishes it to the relay
+   * This method requires the protocol to be initialized with .withProtocol() first.
    * @param pubkey The public key of the account that owns the action code (initiator)
    * @param chain The chain that the action code is intended for
    * @param signFn The function to sign the action code
