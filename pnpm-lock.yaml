@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@actioncodes/protocol':
-        specifier: ^2.0.21
-        version: 2.0.21(@solana/web3.js@1.98.4(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10))(typescript@5.8.3)
+        specifier: ^2.0.22
+        version: 2.0.22(@solana/web3.js@1.98.4(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10))(typescript@5.8.3)
       '@solana/web3.js':
         specifier: ^1.98.4
         version: 1.98.4(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)
@@ -81,8 +81,8 @@ importers:
 
 packages:
 
-  '@actioncodes/protocol@2.0.21':
-    resolution: {integrity: sha512-Eg5TAakKPRts2U1w+6gc6j+/nn84330xnBaWF5xqpMHvoaXF9gPmWPMxxeL2hY8GirdWgAXoIyKgkLYLeA2Ieg==}
+  '@actioncodes/protocol@2.0.22':
+    resolution: {integrity: sha512-UwI8GFrZnZ0sHP7zdyenUn9TEbPpUdc0Pv3ukZ1olKFyV30dAEG+wV2dbnVn8GTTxe8AG065ML0+rdot6+OIBg==}
     peerDependencies:
       '@solana/web3.js': ^1.98.4
       typescript: ^5
@@ -3206,7 +3206,7 @@ packages:
 
 snapshots:
 
-  '@actioncodes/protocol@2.0.21(@solana/web3.js@1.98.4(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10))(typescript@5.8.3)':
+  '@actioncodes/protocol@2.0.22(@solana/web3.js@1.98.4(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10))(typescript@5.8.3)':
     dependencies:
       '@noble/hashes': 2.0.1
       '@solana/spl-memo': 0.2.5(@solana/web3.js@1.98.4(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10))

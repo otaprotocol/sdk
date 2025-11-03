@@ -1,4 +1,12 @@
-import { SolanaAdapter } from "@actioncodes/protocol";
+import {
+  ActionCode,
+  ActionCodeRevoke,
+  ActionCodesProtocol,
+  Chain,
+  CodeGenerationConfig,
+  SignFn,
+  SolanaAdapter,
+} from "@actioncodes/protocol";
 import { ActionCodeState, resolveActionCodeState } from "./state";
 
 // Disable eslint, jshint, and jslint for this file.
@@ -31,9 +39,9 @@ const BROWSER = typeof globalThis === "object" && "window" in globalThis;
 
 export default class Client {
   public readonly relay: relay.ServiceClient;
+  public readonly protocol: protocol.ProtocolClient;
   private readonly options: ClientOptions;
   private readonly target: string;
-
   /**
    * Creates a Client for calling the public and authenticated APIs
    *
@@ -55,6 +63,9 @@ export default class Client {
     this.options = options;
     const base = new BaseClient(this.target, this.options);
     this.relay = new relay.ServiceClient(base);
+    this.protocol = new protocol.ProtocolClient(
+      new ActionCodesProtocol(this.options.protocol)
+    );
   }
 
   /**
@@ -67,6 +78,33 @@ export default class Client {
       ...this.options,
       ...options,
     });
+  }
+
+  /**
+   * Generates an action code and publishes it to the relay
+   * @param pubkey The public key of the account that owns the action code (initiator)
+   * @param chain The chain that the action code is intended for
+   * @param signFn The function to sign the action code
+   * @returns The action code publish response
+   */
+  public async generateAndPublish(
+    pubkey: string,
+    chain: Chain,
+    signFn: SignFn
+  ): Promise<publish.PublishResponse> {
+    const actionCode = await this.protocol.generateActionCode(
+      pubkey,
+      chain,
+      signFn
+    );
+    return await this.relay.publishWallet({
+      code: actionCode.code,
+      chain: chain,
+      expiresAt: actionCode.expiresAt,
+      pubkey: pubkey,
+      timestamp: actionCode.timestamp,
+      signature: actionCode.signature,
+    } as publish.PublishRequest);
   }
 }
 
@@ -92,6 +130,47 @@ export interface ClientOptions {
    * a function which returns a new object for each request.
    */
   auth: relay.AuthParams;
+  protocol: CodeGenerationConfig;
+}
+
+export namespace protocol {
+  export class ProtocolClient {
+    private readonly protocol: ActionCodesProtocol;
+
+    constructor(protocol: ActionCodesProtocol) {
+      this.protocol = protocol;
+    }
+
+    /**
+     *
+     * @param pubkey The public key of the account that owns the action code (initiator)
+     * @param chain The chain that the action code is intended for
+     * @param signFn The function to sign the action code
+     * @returns The action code
+     */
+    public generateActionCode(
+      pubkey: string,
+      chain: Chain,
+      signFn: SignFn
+    ): Promise<ActionCode> {
+      return this.protocol.generate("wallet", pubkey, chain, signFn);
+    }
+
+    /**
+     * Revokes an action code by the initiator
+     * @param actionCode The action code to revoke
+     * @param chain The chain that the action code is intended for
+     * @param signFn The function to sign the action code
+     * @returns The action code revoke
+     */
+    public revokeActionCode(
+      actionCode: ActionCode,
+      chain: Chain,
+      signFn: SignFn
+    ): Promise<ActionCodeRevoke> {
+      return this.protocol.revoke("wallet", actionCode, chain, signFn);
+    }
+  }
 }
 
 export namespace relay {
@@ -282,12 +361,12 @@ export namespace relay {
       intervalMs: number = 2000
     ): AsyncGenerator<ActionCodeState, void, void> {
       let lastStateType: string | null = null;
-      
+
       while (true) {
         try {
           const data = await this.resolve(chain, code);
           const state = resolveActionCodeState(data);
-          
+
           // Only yield if the state type has changed
           if (state.type !== lastStateType) {
             lastStateType = state.type;
