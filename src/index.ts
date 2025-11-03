@@ -15,4 +15,8 @@
 export * from "./client";
 import ActionCodesClient from "./client";
 export * from "./state";
+
+// Re-export all types and values from @actioncodes/protocol
+export * from "@actioncodes/protocol";
+
 export default ActionCodesClient;

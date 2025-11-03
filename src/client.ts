@@ -149,7 +149,6 @@ export interface ClientOptions {
    * a function which returns a new object for each request.
    */
   auth: relay.AuthParams;
-  protocol: CodeGenerationConfig;
 }
 
 export namespace protocol {
