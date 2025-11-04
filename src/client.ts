@@ -24,6 +24,9 @@ export const Prod: BaseURL = "https://relay.actioncodes.org";
 
 /**
  * Environment returns a BaseURL for calling the cloud relayer with the given environment name.
+ * 
+ * @param name The environment name
+ * @returns The base URL for calling the cloud relayer with the given environment name
  */
 export function Environment(
   name: "development" | "production" | "local"
@@ -37,6 +40,14 @@ export function Environment(
 
 const BROWSER = typeof globalThis === "object" && "window" in globalThis;
 
+/**
+ * Client is the main class for calling the public and authenticated APIs
+ * @param relay The relayer client instance
+ * @param protocol The protocol client
+ * @param core The core Action Codesprotocol instance
+ * @param options The client options
+ * @param target The target which the client should be configured to use. See Local and Environment for options.
+ */
 export default class Client {
   public readonly relay: relay.ServiceClient;
   private _protocol: protocol.ProtocolClient | undefined;
@@ -78,18 +89,31 @@ export default class Client {
     });
   }
 
+  /**
+   * Initializes the protocol client with the given configuration
+   * @param config The configuration for the protocol client
+   * @returns The client instance
+   */
   public withProtocol(config: CodeGenerationConfig): this {
     this._core = new ActionCodesProtocol(config);
     this._protocol = new protocol.ProtocolClient(this._core);
     return this;
   }
 
+  /**
+   * Returns the protocol client instance
+   * @returns The protocol client instance
+   */
   public get protocol(): protocol.ProtocolClient {
     if (!this._protocol)
       throw new Error("Protocol not initialized. Use .withProtocol() first.");
     return this._protocol;
   }
 
+  /**
+   * Returns the core protocol instance
+   * @returns The core protocol instance
+   */
   public get core(): ActionCodesProtocol {
     if (!this._core)
       throw new Error("Core protocol not initialized. Use .withProtocol() first.");
@@ -192,6 +216,7 @@ export namespace protocol {
 }
 
 export namespace relay {
+
   export type ActionCodeFinalizePayload =
     | ActionCodeFinalizePayloadSignOnlyMessage
     | ActionCodeFinalizePayloadSignOnlyTransaction
@@ -263,6 +288,10 @@ export namespace relay {
     authorization: string;
   }
 
+  /**
+   * ServiceClient is the class for calling the authenticated APIs
+   * @param baseClient The base client instance
+   */
   export class ServiceClient {
     private baseClient: BaseClient;
 
@@ -280,6 +309,14 @@ export namespace relay {
       this.observe = this.observe.bind(this);
     }
 
+    /**
+     * Consumes an action code by attaching payload to it
+     * Payload can be a message, a transaction to sign or execute.
+     * 
+     * @param params The parameters for the consume action code endpoint
+     * @param protocolMetaParams The protocol meta parameters
+     * @returns {Promise<void>} The void
+     */
     public async consume(
       params: routes.ConsumeRequest,
       protocolMetaParams?: Record<string, unknown>
@@ -315,6 +352,14 @@ export namespace relay {
       }
     }
 
+    /**
+     * Redeems an action code by providing redeemer pubkey
+     * After that the action code is set as redeemed and awaits consuming
+     * to contain payload as a message, a transaction to sign or execute.
+     * 
+     * @param params The parameters for the redeem action code endpoint
+     * @returns {Promise<void>} The void
+     */
     public async redeem(params: routes.RedeemRequest): Promise<void> {
       await this.baseClient.callTypedAPI(
         "POST",
@@ -323,6 +368,15 @@ export namespace relay {
       );
     }
 
+    /**
+     * Finalizes action by providing final payload
+     * In case of message it is a signed message
+     * In case of transaction to sign it is a signed transaction
+     * In case of transaction to execute it is a transaction hash
+     * 
+     * @param params The parameters for the finalize action code endpoint
+     * @returns {Promise<void>} The void
+     */
     public async finalize(params: routes.FinalizeRequest): Promise<void> {
       await this.baseClient.callTypedAPI(
         "POST",
@@ -331,12 +385,21 @@ export namespace relay {
       );
     }
 
+    /**
+     * Checks the health of the relayer
+     * @returns {Promise<routes.HealthResponse>} The health response
+     */
     public async health(): Promise<routes.HealthResponse> {
       // Now make the actual call to the API
       const resp = await this.baseClient.callTypedAPI("GET", `/health`);
       return (await resp.json()) as routes.HealthResponse;
     }
 
+    /**
+     * Publishes a delegatedaction code by providing the parameters
+     * @param params The parameters for the publish action code endpoint
+     * @returns {Promise<publish.PublishResponse>} The publish response
+     */
     public async publishDelegated(
       params: publish.PublishRequest
     ): Promise<publish.PublishResponse> {
@@ -349,6 +412,11 @@ export namespace relay {
       return (await resp.json()) as publish.PublishResponse;
     }
 
+    /**
+     * Publishes a wallet signed action code by providing the parameters
+     * @param params The parameters for the publish action code endpoint
+     * @returns {Promise<publish.PublishResponse>} The publish response
+     */
     public async publishWallet(
       params: publish.PublishRequest
     ): Promise<publish.PublishResponse> {
@@ -361,6 +429,12 @@ export namespace relay {
       return (await resp.json()) as publish.PublishResponse;
     }
 
+    /**
+     * Resolves an action code by providing the action code details
+     * @param chain The chain of the action code
+     * @param code The action code
+     * @returns {Promise<ActionCodeResolve>} The action code resolve response
+     */
     public async resolve(
       chain: string,
       code: string
@@ -373,6 +447,15 @@ export namespace relay {
       return (await resp.json()) as ActionCodeResolve;
     }
 
+    /**
+     * Observes the status of an action code by polling the resolve endpoint
+     * and yielding the new state type if it has changed.
+     * 
+     * @param chain The chain of the action code
+     * @param code The action code
+     * @param intervalMs @default 2000 The interval in milliseconds to poll the action code status
+     * @returns {AsyncGenerator<ActionCodeState, void, void>} The action code status generator
+     */
     public async *observe(
       chain: string,
       code: string,
@@ -399,6 +482,11 @@ export namespace relay {
       }
     }
 
+    /**
+     * Revokes a delegated action code by providing the parameters
+     * @param params The parameters for the revoke action code endpoint
+     * @returns {Promise<void>} The void
+     */
     public async revokeDelegated(params: revoke.RevokeRequest): Promise<void> {
       await this.baseClient.callTypedAPI(
         "POST",
@@ -407,6 +495,11 @@ export namespace relay {
       );
     }
 
+    /**
+     * Revokes a wallet signed action code by providing the parameters
+     * @param params The parameters for the revoke action code endpoint
+     * @returns {Promise<void>} The void
+     */
     public async revokeWallet(params: revoke.RevokeRequest): Promise<void> {
       await this.baseClient.callTypedAPI(
         "POST",
