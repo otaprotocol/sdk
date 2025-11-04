@@ -4,6 +4,7 @@ import {
   ActionCodesProtocol,
   Chain,
   CodeGenerationConfig,
+  ProtocolMetaFields,
   SignFn,
   SolanaAdapter,
 } from "@actioncodes/protocol";
@@ -24,7 +25,7 @@ export const Prod: BaseURL = "https://relay.actioncodes.org";
 
 /**
  * Environment returns a BaseURL for calling the cloud relayer with the given environment name.
- * 
+ *
  * @param name The environment name
  * @returns The base URL for calling the cloud relayer with the given environment name
  */
@@ -116,7 +117,9 @@ export default class Client {
    */
   public get core(): ActionCodesProtocol {
     if (!this._core)
-      throw new Error("Core protocol not initialized. Use .withProtocol() first.");
+      throw new Error(
+        "Core protocol not initialized. Use .withProtocol() first."
+      );
     return this._core;
   }
 
@@ -216,7 +219,6 @@ export namespace protocol {
 }
 
 export namespace relay {
-
   export type ActionCodeFinalizePayload =
     | ActionCodeFinalizePayloadSignOnlyMessage
     | ActionCodeFinalizePayloadSignOnlyTransaction
@@ -312,9 +314,11 @@ export namespace relay {
     /**
      * Consumes an action code by attaching payload to it
      * Payload can be a message, a transaction to sign or execute.
-     * 
+     *
      * @param params The parameters for the consume action code endpoint
-     * @param protocolMetaParams The protocol meta parameters
+     * @param protocolMetaParams The protocol meta parameters, this is key/value pairs that will be attached to the protocol meta
+     * and will be included in the transaction instructions as memo. You can use it for tracking the action code consumption, onchain
+     * tracking, etc.
      * @returns {Promise<void>} The void
      */
     public async consume(
@@ -328,14 +332,21 @@ export namespace relay {
         ) {
           // in this case we need to attach protocol meta to the transaction
           const resolvedCode = await this.resolve(params.chain, params.code);
+          const redeemed =
+            resolvedCode.data.mode === "redeem-code" &&
+            "intendedFor" in resolvedCode.data;
+
+          const meta = {
+            ver: 2,
+            id: resolvedCode.codeHash,
+            int: redeemed ? resolvedCode.data.intendedFor : resolvedCode.pubkey,
+            p: protocolMetaParams,
+            ...(redeemed ? { iss: resolvedCode.pubkey } : {}),
+          } as ProtocolMetaFields;
+
           const txWithMeta = SolanaAdapter.attachProtocolMeta(
             params.payload.transaction,
-            {
-              id: resolvedCode.codeHash,
-              ver: 2,
-              int: resolvedCode.pubkey,
-              p: protocolMetaParams,
-            }
+            meta
           );
           params.payload.transaction = txWithMeta;
         }
@@ -356,7 +367,7 @@ export namespace relay {
      * Redeems an action code by providing redeemer pubkey
      * After that the action code is set as redeemed and awaits consuming
      * to contain payload as a message, a transaction to sign or execute.
-     * 
+     *
      * @param params The parameters for the redeem action code endpoint
      * @returns {Promise<void>} The void
      */
@@ -373,7 +384,7 @@ export namespace relay {
      * In case of message it is a signed message
      * In case of transaction to sign it is a signed transaction
      * In case of transaction to execute it is a transaction hash
-     * 
+     *
      * @param params The parameters for the finalize action code endpoint
      * @returns {Promise<void>} The void
      */
@@ -450,7 +461,7 @@ export namespace relay {
     /**
      * Observes the status of an action code by polling the resolve endpoint
      * and yielding the new state type if it has changed.
-     * 
+     *
      * @param chain The chain of the action code
      * @param code The action code
      * @param intervalMs @default 2000 The interval in milliseconds to poll the action code status
