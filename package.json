@@ -34,13 +34,13 @@
     "actioncodes-types",
     "actioncodes-constants"
   ],
-  "author": "OTA Protocol Core Team",
+  "author": "Action Codes Core Team",
   "license": "Apache-2.0",
-  "copyright": "Copyright 2025 OTA Protocol",
-  "homepage": "https://ota.codes",
+  "copyright": "Copyright 2025 Trana, Inc.",
+  "homepage": "https://actioncodes.org",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/otaprotocol/sdk.git"
+    "url": "git+https://github.com/actioncodesorg/sdk.git"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",
