@@ -283,7 +283,7 @@ export namespace relay {
     chain: dist.Chain;
     pubkey: string;
     expiresAt: number;
-    data: ActionCodePayload | ActionCodeFinalizePayload;
+    data?: ActionCodePayload | ActionCodeFinalizePayload;
   }
 
   export interface AuthParams {
@@ -333,13 +333,16 @@ export namespace relay {
           // in this case we need to attach protocol meta to the transaction
           const resolvedCode = await this.resolve(params.chain, params.code);
           const redeemed =
+            resolvedCode.data &&
             resolvedCode.data.mode === "redeem-code" &&
             "intendedFor" in resolvedCode.data;
 
           const meta = {
             ver: 2,
             id: resolvedCode.codeHash,
-            int: redeemed ? resolvedCode.data.intendedFor : resolvedCode.pubkey,
+            int: redeemed && resolvedCode.data
+              ? resolvedCode.data.intendedFor
+              : resolvedCode.pubkey,
             p: protocolMetaParams,
             ...(redeemed ? { iss: resolvedCode.pubkey } : {}),
           } as ProtocolMetaFields;
