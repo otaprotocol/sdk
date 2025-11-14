@@ -9,6 +9,7 @@ import {
   SolanaAdapter,
 } from "@actioncodes/protocol";
 import { ActionCodeState, resolveActionCodeState } from "./state";
+import { Connection } from "@solana/web3.js";
 
 // Disable eslint, jshint, and jslint for this file.
 /* jshint ignore:start */
@@ -176,6 +177,12 @@ export interface ClientOptions {
    * a function which returns a new object for each request.
    */
   auth: relay.AuthParams;
+
+  adapters: {
+    solana: {
+      connection: Connection;
+    };
+  };
 }
 
 export namespace protocol {
@@ -340,16 +347,18 @@ export namespace relay {
           const meta = {
             ver: 2,
             id: resolvedCode.codeHash,
-            int: redeemed && resolvedCode.data
-              ? resolvedCode.data.intendedFor
-              : resolvedCode.pubkey,
+            int:
+              redeemed && resolvedCode.data
+                ? resolvedCode.data.intendedFor
+                : resolvedCode.pubkey,
             p: protocolMetaParams,
             ...(redeemed ? { iss: resolvedCode.pubkey } : {}),
           } as ProtocolMetaFields;
 
-          const txWithMeta = SolanaAdapter.attachProtocolMeta(
+          const txWithMeta = await SolanaAdapter.attachProtocolMeta(
             params.payload.transaction,
-            meta
+            meta,
+            this.baseClient.adapters.solana.connection
           );
           params.payload.transaction = txWithMeta;
         }
@@ -850,6 +859,7 @@ class BaseClient {
     headers?: Record<string, string>;
   };
   readonly authGenerator?: AuthDataGenerator;
+  readonly adapters: ClientOptions["adapters"];
 
   constructor(baseURL: string, options: ClientOptions) {
     this.baseURL = baseURL;
@@ -879,6 +889,8 @@ class BaseClient {
         this.authGenerator = () => auth;
       }
     }
+
+    this.adapters = options.adapters ?? {};
   }
 
   async getAuthData(): Promise<CallParameters | undefined> {
